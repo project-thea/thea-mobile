@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 import { useRouter } from 'expo-router';
@@ -16,6 +16,7 @@ import {
   Alert
 } from 'react-native';
 import { useDispatch } from 'react-redux';
+import Toast from 'react-native-toast-message';
 
 import { setToken } from '../../store';
 import { useBaseUrl } from '@/hooks/useBaseUrl';
@@ -27,20 +28,51 @@ const RegisterScreen = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [emptyFieldExists, setEmptyFieldExists] = useState(false)
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const [nameMissing, setNameMissing] = useState(false)
+  const [emailMissing, setEmailMissing] = useState(false)
+  const [passwordMissing, setPasswordMissing] = useState(false)
+  const [confirmPasswordMissing, setConfirmPasswordMissing] = useState(false)
 
   const router = useRouter();
   const dispatch = useDispatch();
   const baseUrl = useBaseUrl();
 
-  const handleRegister = async () => {
-    if(!name || !email || !password || !confirmPassword){
-      Alert.alert('Error', 'There is something wrong with your form!');
-      return;
+  useEffect(() => {
+    if(name) setNameMissing(false)
+
+    if(email){
+      if(!emailRegex.test(email)){ setEmailMissing(true) }
+      else { setEmailMissing(false) }
+      
     }
 
-    if(password !== confirmPassword){
-      Alert.alert('Error', 'Passwords do not match!');
+    if(password) setPasswordMissing(false)
+    if(confirmPassword) setConfirmPasswordMissing(false)
+  }, [name, email, password]);
+
+  const handleRegister = async () => {
+    if(!name || !email || !password){
+      setEmptyFieldExists(true)
+    } else {
+      setEmptyFieldExists(false)
+    }
+
+    if(!name)setNameMissing(true)
+    if (!email) setEmailMissing(true)
+    if (!password) setPasswordMissing(true)
+    
+    if (emptyFieldExists) return;    
+
+    if(!emailRegex.test(email)){ return}
+
+    if(!confirmPassword || password !== confirmPassword){
+      setConfirmPasswordMissing(true)
       return;
+    } else {
+      setConfirmPasswordMissing(false)
     }
 
     setIsLoading(true);
@@ -65,13 +97,38 @@ const RegisterScreen = () => {
         dispatch(setToken(data.access));
         router.replace('/(app)/home');
       } else {
-        Alert.alert('Login Failed', data.message || 'An error occurred');
+        console.log('Registration unsuccessful:', data);
+        if (data.email && data.email[0] === 'user with this email already exists.') {
+          Toast.show({
+            type: 'error',
+            text1: 'Registration Failed',
+            text2: 'User with this email already exists!',
+            position: 'bottom'
+          });
+        } else {
+          Toast.show({
+            type: 'error',
+            text1: 'Registration Failed',
+            text2: 'Please try again!',
+            position: 'bottom'
+          });
+        }
       }
     } catch (error) {
       console.error('Registration error:', error);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Oops!',
+        text2: 'An error occurred, please try again!',
+        position: 'bottom'
+      });
     } finally {
       setIsLoading(false);
+      setName('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setEmailMissing(false)
     }
 
   };
@@ -106,13 +163,27 @@ const RegisterScreen = () => {
         dispatch(setToken(data.access));
         router.replace('/(app)/home');
       } else {
-        Alert.alert('Error', data.message || 'An error occurred');
+        Toast.show({
+          type: 'error',
+          text1: 'Oops!',
+          text2: 'An error occurred, please try again!',
+          position: 'bottom'
+        });
       }
     } catch (error) {
-      console.error('Anonymous user creation error:', error);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      console.error('could not create anonymous user', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Oops!',
+        text2: 'An error occurred, please try again!',
+        position: 'bottom'
+      });
     } finally {
       setIsLoading(false);
+      setName('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
     }
 
   }
@@ -132,6 +203,7 @@ const RegisterScreen = () => {
             onChangeText={setName}
             autoCapitalize="words"
           />
+          {nameMissing && <Text style={styles.missingField}>Please provide a name!</Text>}
           <TextInput
             style={styles.input}
             placeholder="Email"
@@ -140,20 +212,25 @@ const RegisterScreen = () => {
             keyboardType="email-address"
             autoCapitalize="none"
           />
+          {emailMissing && <Text style={styles.missingField}>Please provide a valid email address!</Text>}
           <TextInput
             style={styles.input}
             placeholder="Password"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            autoCapitalize='none'
           />
+          {passwordMissing && <Text style={styles.missingField}>Please provide a password!</Text>}
           <TextInput
             style={styles.input}
             placeholder="Confirm password"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
+            autoCapitalize='none'
           />
+          {confirmPasswordMissing && <Text style={styles.missingField}>This should match the password above!</Text>}
           <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={isLoading}>
           {isLoading ? (
                 <ActivityIndicator color="#ffffff" />
@@ -231,6 +308,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
+  missingField: {
+    color: 'red',
+    fontSize: 14,
+    marginBottom: 10,
+    paddingHorizontal: 15,
+    width: '100%',
+  }
 });
 
 export default RegisterScreen;

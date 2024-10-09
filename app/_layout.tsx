@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import 'react-native-reanimated';
+import Toast, {BaseToast, ErrorToast} from 'react-native-toast-message';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { BaseUrlProvider } from '@/hooks/useBaseUrl';
@@ -42,6 +43,7 @@ export default function RootLayout() {
                 <Stack.Screen name="(auth)/register" options={{ headerShown: false }} />
                 <Stack.Screen name="(app)/home" options={{ headerShown: false }} />
               </Stack>
+              <Toast />
             </AuthGuard>
           </BaseUrlProvider>
         </PersistGate>

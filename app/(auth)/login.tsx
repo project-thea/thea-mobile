@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import {
   View,
@@ -15,6 +15,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { useDispatch } from 'react-redux';
+import Toast from 'react-native-toast-message';
 
 import Divider from '@/components/Divider';
 import { setToken } from '../../store';
@@ -22,6 +23,8 @@ import { useBaseUrl } from '@/hooks/useBaseUrl';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
+  const [emailMissing, setEmailMissing] = useState(false);
+  const [passwordMissing, setPasswordMissing] = useState(false);
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -29,8 +32,14 @@ const LoginScreen = () => {
   const baseUrl = useBaseUrl();
 
   const handleLogin = async () => {
-    if(!email && !password){
-      Alert.alert('Error', 'Please enter email and password');
+    if(!email ){
+      setEmailMissing(true);
+      if(!password){ setPasswordMissing(true); }
+      return;
+    }
+
+    if(!password){
+      setPasswordMissing(true);
       return;
     }
 
@@ -55,19 +64,36 @@ const LoginScreen = () => {
         dispatch(setToken(data.access));
         router.replace('/(app)/home');
       } else {
-        Alert.alert('Login Failed', data.message || 'An error occurred');
+        Toast.show({
+          type: 'error',
+          text1: 'Login Failed',
+          text2: 'Check your credentials and try again!',
+          position: 'bottom'
+        });
       }
     } catch (error) {
       console.error('Login error:', error);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Oops!',
+        text2: 'An error occurred, please try again!',
+        position: 'bottom'
+      });
     } finally {
       setIsLoading(false);
+      setEmail('');
+      setPassword('');
     }
   };
 
   const navigateToRegister = () => {
    router.replace('/(auth)/register');
   };
+
+  useEffect(() => {
+    if (email) { setEmailMissing(false); }
+    if (password) { setPasswordMissing(false); }
+  }, [password, email]);
 
   return (
     <KeyboardAvoidingView
@@ -86,6 +112,7 @@ const LoginScreen = () => {
               keyboardType="email-address"
               autoCapitalize="none"
             />
+            {emailMissing && <Text style={styles.missingField}>Please provide a valid email address!</Text>}
             <TextInput
               style={styles.input}
               placeholder="Password"
@@ -93,6 +120,7 @@ const LoginScreen = () => {
               onChangeText={setPassword}
               secureTextEntry
             />
+            {passwordMissing && <Text style={styles.missingField}>Please provide a password!</Text>}
             <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={isLoading}>
               {isLoading ? (
                 <ActivityIndicator color="#ffffff" />
@@ -162,6 +190,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
+  missingField: {
+    color: 'red',
+    fontSize: 14,
+    marginBottom: 10,
+    paddingHorizontal: 15,
+    width: '100%',
+  }
 });
 
 export default LoginScreen;
