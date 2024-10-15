@@ -20,7 +20,6 @@ import Toast from 'react-native-toast-message';
 
 import { setToken } from '../../store';
 import { useBaseUrl } from '@/hooks/useBaseUrl';
-import Divider from '@/components/Divider';
 
 const RegisterScreen = () => {
   const [name, setName] = useState('');
@@ -137,57 +136,6 @@ const RegisterScreen = () => {
     router.replace('/login');
   };
 
-  const createAnonymousUser = async () => {
-    let name = uuidv4().toString().slice(0,8);
-    let password = name
-    const email = `${name}@anonymous.com`;
-    
-    setIsLoading(true);
-
-    try {
-      const response = await fetch(`${baseUrl}/register/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        dispatch(setToken(data.access));
-        router.replace('/(app)/home');
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Oops!',
-          text2: 'An error occurred, please try again!',
-          position: 'bottom'
-        });
-      }
-    } catch (error) {
-      console.error('could not create anonymous user', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Oops!',
-        text2: 'An error occurred, please try again!',
-        position: 'bottom'
-      });
-    } finally {
-      setIsLoading(false);
-      setName('');
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
-    }
-
-  }
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -241,14 +189,6 @@ const RegisterScreen = () => {
           <TouchableOpacity onPress={navigateToLogin}>
             <Text style={styles.loginText}>
               Already have an account? Login here
-            </Text>
-          </TouchableOpacity>
-
-          <Divider />
-
-          <TouchableOpacity onPress={createAnonymousUser}>
-            <Text style={styles.loginText}>
-              Use as anonymous user
             </Text>
           </TouchableOpacity>
 

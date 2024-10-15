@@ -38,10 +38,9 @@ export default function RootLayout() {
         <PersistGate loading={null} persistor={persistor}>
           <BaseUrlProvider>
             <AuthGuard>
-              <Stack>
+              <Stack screenOptions={{headerShown: false}}>
                 <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
                 <Stack.Screen name="(auth)/register" options={{ headerShown: false }} />
-                <Stack.Screen name="(app)/home" options={{ headerShown: false }} />
               </Stack>
               <Toast />
             </AuthGuard>
