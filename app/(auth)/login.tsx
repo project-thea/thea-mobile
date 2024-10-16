@@ -19,7 +19,7 @@ import { v4 as uuidv4 } from 'uuid';
 import Toast from 'react-native-toast-message';
 
 import Divider from '@/components/Divider';
-import { setToken } from '../../store';
+import { setToken, setUserId } from '../../store';
 import { useBaseUrl } from '@/hooks/useBaseUrl';
 
 const LoginScreen = () => {
@@ -63,6 +63,7 @@ const LoginScreen = () => {
       if (response.ok) {
         console.log('Login successful:', data);
         dispatch(setToken(data.access));
+        dispatch(setUserId(data.user.id));
         router.replace('/(app)/home');
       } else {
         Toast.show({

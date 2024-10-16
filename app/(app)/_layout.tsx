@@ -6,13 +6,14 @@ import {
 } from "@react-navigation/drawer";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useDispatch } from "react-redux";
-import { clearToken } from "@/store";
+import { clearToken, clearUserId } from "@/store";
 
 function CustomDrawerContent(props) {
   const dispatch = useDispatch();
 
   const handleSignOut = () => {
     dispatch(clearToken());
+    dispatch(clearUserId());
   };
 
   return (

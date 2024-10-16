@@ -8,6 +8,8 @@ import {
   Platform
 } from "react-native";
 import * as Location from 'expo-location';
+import { useBaseUrl } from "@/hooks/useBaseUrl";
+import { useSelector } from "react-redux";
 
 export default function MainScreen() {
   const [mainButtonText, setButtonText] = useState("Start tracking!");
@@ -15,6 +17,12 @@ export default function MainScreen() {
   const [isTrackingButtonClicked, setIsTrackingButtonCliked] = useState(false);
   const [location, setLocation] = useState<null|Location.LocationObject>(null);
   const [locationSubscription, setLocationSubscription] = useState<null|Location.LocationSubscription>(null);
+
+  const baseUrl = useBaseUrl();
+  const token = useSelector((state) => state.auth.token);
+  const userId = useSelector((state) => state.auth.userId);
+
+  // console.log("user id: ", userId);
 
   useEffect(() => {
     (async () => {
@@ -52,10 +60,38 @@ export default function MainScreen() {
         timeInterval: 2*60*1000, // 2 minutes
         distanceInterval: 50, // 50 metres
       },
-      (location) => {
+      async (location) => {
         console.log("Location: ", location);
 
-        // do stuff here to send location to API or save for offline processing.
+        try {
+          const {latitude, longitude} = location.coords;
+          const response = await fetch(`${baseUrl}/api/locations/`, {
+            method: 'POST',
+
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              "locations": [{
+                latitude: latitude.toFixed(6), 
+                longitude: longitude.toFixed(6),
+                user: userId
+              }]
+            }),
+          });
+
+          const data = await response.json();
+          if (response.ok) {
+            console.log("location save response: ", JSON.stringify(data));
+            return;
+          } else {
+            console.error("location save error: ", JSON.stringify(data));
+            return;
+          }          
+        } catch (error) {
+          console.error("OOPS: ", error);
+        }
       }
     );
 

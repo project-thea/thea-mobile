@@ -8,6 +8,7 @@ const authSlice = createSlice({
   initialState: {
     token: null as string | null,
     isSignedIn: false,
+    userId: null as string | null,
   },
   reducers: {
     setToken: (state, action: PayloadAction<string>) => {
@@ -18,11 +19,17 @@ const authSlice = createSlice({
       state.token = null;
       state.isSignedIn = false;
     },
+    setUserId: (state, action: PayloadAction<string>) => {
+      state.userId = action.payload;
+    },
+    clearUserId: (state) => {
+      state.userId = null;
+    }
   },
 });
 
 // Export actions
-export const { setToken, clearToken } = authSlice.actions;
+export const { setToken, clearToken, setUserId, clearUserId } = authSlice.actions;
 
 // Configure persist
 const persistConfig = {
