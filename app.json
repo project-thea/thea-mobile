@@ -22,7 +22,11 @@
       },
       "permissions": [
         "FOREGROUND_SERVICE",
-        "FOREGROUND_SERVICE_LOCATION"
+        "FOREGROUND_SERVICE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
       ],
       "package": "com.bodastage.thea"
     },
@@ -38,10 +42,16 @@
         {
           "isAndroidForegroundServiceEnabled": true
         }
-      ]
+      ],
+      "./plugins/withAndroidForegroundService.js"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "adf6cd09-c75e-4178-94d8-1e9e9d04bba9"
+      }
     }
   }
 }

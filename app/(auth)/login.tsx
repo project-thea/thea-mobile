@@ -61,7 +61,6 @@ const LoginScreen = () => {
       const data = await response.json();
 
       if (response.ok) {
-        console.log('Login successful:', data);
         dispatch(setToken(data.access));
         dispatch(setUserId(data.user.id));
         router.replace('/(app)/home');
@@ -74,7 +73,7 @@ const LoginScreen = () => {
         });
       }
     } catch (error) {
-      console.error('Login error:', error);
+      // console.error('Login error:', error);
       Toast.show({
         type: 'error',
         text1: 'Oops!',

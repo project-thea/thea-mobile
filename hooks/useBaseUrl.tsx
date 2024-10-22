@@ -5,8 +5,9 @@ const BaseUrlContext = createContext(undefined);
 
 export const BaseUrlProvider = ({ children }) => {
   const baseUrl = __DEV__
-    ? 'http://10.0.2.2:8000'
-    : 'https://api.thea.com';
+    // ? 'http://10.0.2.2:8000'
+    ? 'http://192.168.250.198:8000' // fix: using my device IP to test on physical device
+    : 'https://api.project-thea.org';
 
   return (
     <BaseUrlContext.Provider value={{ baseUrl }}>

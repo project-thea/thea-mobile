@@ -1,0 +1,17 @@
+import { LocationObject } from "expo-location";
+
+export interface LocationResponse extends LocationObject {
+  id: string;
+  isSynced: boolean;
+  user: string;
+}
+
+export interface LocationResponseState {
+  locations: LocationResponse[];
+}
+
+export interface LocationRecord {
+  user: string;
+  latitude: number;
+  longitude: number;
+}
