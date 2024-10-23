@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import 'react-native-reanimated';
-import Toast, {BaseToast, ErrorToast} from 'react-native-toast-message';
+import Toast from 'react-native-toast-message';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { BaseUrlProvider } from '@/hooks/useBaseUrl';
@@ -30,7 +30,7 @@ export default function RootLayout() {
 
   if (!loaded) {
     return null;
-  }
+  }  
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
@@ -38,10 +38,9 @@ export default function RootLayout() {
         <PersistGate loading={null} persistor={persistor}>
           <BaseUrlProvider>
             <AuthGuard>
-              <Stack>
+              <Stack screenOptions={{headerShown: false}}>
                 <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
                 <Stack.Screen name="(auth)/register" options={{ headerShown: false }} />
-                <Stack.Screen name="(app)/home" options={{ headerShown: false }} />
               </Stack>
               <Toast />
             </AuthGuard>

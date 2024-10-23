@@ -15,10 +15,11 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { useDispatch } from 'react-redux';
+import { v4 as uuidv4 } from 'uuid';
 import Toast from 'react-native-toast-message';
 
 import Divider from '@/components/Divider';
-import { setToken } from '../../store';
+import { setToken, setUserId } from '../../store';
 import { useBaseUrl } from '@/hooks/useBaseUrl';
 
 const LoginScreen = () => {
@@ -60,8 +61,8 @@ const LoginScreen = () => {
       const data = await response.json();
 
       if (response.ok) {
-        console.log('Login successful:', data);
         dispatch(setToken(data.access));
+        dispatch(setUserId(data.user.id));
         router.replace('/(app)/home');
       } else {
         Toast.show({
@@ -72,7 +73,7 @@ const LoginScreen = () => {
         });
       }
     } catch (error) {
-      console.error('Login error:', error);
+      // console.error('Login error:', error);
       Toast.show({
         type: 'error',
         text1: 'Oops!',
@@ -94,6 +95,56 @@ const LoginScreen = () => {
     if (email) { setEmailMissing(false); }
     if (password) { setPasswordMissing(false); }
   }, [password, email]);
+
+  const createAnonymousUser = async () => {
+    let name = uuidv4().toString().slice(0,8);
+    let password = name
+    const email = `${name}@anonymous.com`;
+    
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${baseUrl}/register/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        dispatch(setToken(data.access));
+        router.replace('/(app)/home');
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Oops!',
+          text2: 'An error occurred, please try again!',
+          position: 'bottom'
+        });
+      }
+    } catch (error) {
+      console.error('could not create anonymous user', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Oops!',
+        text2: 'An error occurred, please try again!',
+        position: 'bottom'
+      });
+    } finally {
+      setIsLoading(false);
+      setEmail('');
+      setPassword('');
+    }
+
+  }
+
 
   return (
     <KeyboardAvoidingView
@@ -133,6 +184,15 @@ const LoginScreen = () => {
                 Don't have an account? Register here
               </Text>
             </TouchableOpacity>
+
+          <Divider />
+
+          <TouchableOpacity onPress={createAnonymousUser}>
+            <Text style={styles.registerText}>
+              Use as anonymous user
+            </Text>
+          </TouchableOpacity>
+
           </View>
         </TouchableWithoutFeedback>
       </ScrollView>
