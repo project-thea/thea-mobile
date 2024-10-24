@@ -20,6 +20,7 @@ import Toast from 'react-native-toast-message';
 
 import Divider from '@/components/Divider';
 import { setToken, setUserId } from '../../store';
+import { userApi } from '@/services/api';
 import { useBaseUrl } from '@/hooks/useBaseUrl';
 
 const LoginScreen = () => {
@@ -47,31 +48,12 @@ const LoginScreen = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${baseUrl}/login/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
+      const response = await userApi.login({email, password})
 
-      const data = await response.json();
-
-      if (response.ok) {
-        dispatch(setToken(data.access));
-        dispatch(setUserId(data.user.id));
-        router.replace('/(app)/home');
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Login Failed',
-          text2: 'Check your credentials and try again!',
-          position: 'bottom'
-        });
-      }
+      dispatch(setToken(response.data.access));
+      dispatch(setUserId(response.data.user.id));
+      router.replace('/(app)/home');
+      
     } catch (error) {
       // console.error('Login error:', error);
       Toast.show({
@@ -104,31 +86,12 @@ const LoginScreen = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${baseUrl}/register/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-        }),
-      });
+      const response = await userApi.register({name, email, password})
 
-      const data = await response.json();
-
-      if (response.ok) {
-        dispatch(setToken(data.access));
-        router.replace('/(app)/home');
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Oops!',
-          text2: 'An error occurred, please try again!',
-          position: 'bottom'
-        });
-      }
+      dispatch(setToken(response.data.access));
+      dispatch(setUserId(response.data.user.id));
+      router.replace('/(app)/home');
+      
     } catch (error) {
       console.error('could not create anonymous user', error);
       Toast.show({

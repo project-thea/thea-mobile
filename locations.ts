@@ -12,6 +12,6 @@ export interface LocationResponseState {
 
 export interface LocationRecord {
   user: string;
-  latitude: number;
-  longitude: number;
+  latitude: string;
+  longitude: string;
 }

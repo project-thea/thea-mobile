@@ -18,8 +18,9 @@ import {
 import { useDispatch } from 'react-redux';
 import Toast from 'react-native-toast-message';
 
-import { setToken } from '../../store';
+import { setToken, setUserId } from '../../store';
 import { useBaseUrl } from '@/hooks/useBaseUrl';
+import { userApi } from '@/services/api';
 
 const RegisterScreen = () => {
   const [name, setName] = useState('');
@@ -77,44 +78,12 @@ const RegisterScreen = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${baseUrl}/register/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-        }),
-      });
+      const response = await userApi.register({name, email, password})
 
-      const data = await response.json();
-
-      if (response.ok) {
-        console.log('Registration successful:', data);
-        dispatch(setToken(data.access));
-        router.replace('/(app)/home');
-      } else {
-        console.log('Registration unsuccessful:', data);
-        if (data.email && data.email[0] === 'user with this email already exists.') {
-          Toast.show({
-            type: 'error',
-            text1: 'Registration Failed',
-            text2: 'User with this email already exists!',
-            position: 'bottom'
-          });
-        } else {
-          Toast.show({
-            type: 'error',
-            text1: 'Registration Failed',
-            text2: 'Please try again!',
-            position: 'bottom'
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
+      dispatch(setToken(response.data.access));
+      dispatch(setUserId(response.data.user.id));
+      router.replace('/(app)/home');
+    } catch (error: any) {
       Toast.show({
         type: 'error',
         text1: 'Oops!',
