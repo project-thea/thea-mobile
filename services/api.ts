@@ -6,7 +6,7 @@ import { store } from "@/store";
 //   ? "http://10.0.2.2:8000"
 //   : "https://api.project-thea.org";
 
-const API_BASE_URL = "http://75.119.129.96:8025"
+const API_BASE_URL = "https://testsite.esomelo.com/thea"
 
 interface ApiResponse<T> {
   data: {
