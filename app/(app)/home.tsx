@@ -10,17 +10,18 @@ import {
 import * as Location from "expo-location";
 import { useBaseUrl } from "@/hooks/useBaseUrl";
 import { useSelector, useDispatch } from "react-redux";
-import { addLocation } from "@/store";
+import { addLocation, store } from "@/store";
 import { v4 as uuidv4 } from "uuid";
 import VIForegroundService from "@voximplant/react-native-foreground-service";
+import { locationsApi } from "@/services/api";
 
 export default function MainScreen() {
   const [mainButtonText, setButtonText] = useState("Start tracking!");
   const [buttonColor, setButtonColor] = useState("#34eb5b");
   const [isTrackingButtonClicked, setIsTrackingButtonCliked] = useState(false);
   const [locationSubscription, setLocationSubscription] =
-    useState<null | Location.LocationSubscription>(null);
-
+  useState<null | Location.LocationSubscription>(null);
+    
   const baseUrl = useBaseUrl();
   const dispatch = useDispatch();
   const token = useSelector((state) => state.auth.token);
@@ -63,7 +64,7 @@ export default function MainScreen() {
     );
 
     const notificationConfig = {
-      channelId: "channelId",
+      channelId: "22",
       id: 2210,
       title: "Title",
       text: "Some text",
@@ -71,7 +72,7 @@ export default function MainScreen() {
       button: "Some text",
     };
 
-    await VIForegroundService.getInstance().startService(notificationConfig);
+    await VIForegroundService.getInstance().startService(notificationConfig, 1);
 
     const subscription = await Location.watchPositionAsync(
       {
@@ -80,7 +81,7 @@ export default function MainScreen() {
         distanceInterval: 50, // 50 metres
       },
       async (location) => {
-        console.log("location: ", location);
+        // console.log("location: ", location);
         dispatch(
           addLocation({
             ...location,
@@ -93,29 +94,13 @@ export default function MainScreen() {
         try {
           const { latitude, longitude } = location.coords;
 
-          // TODO; save these locations to a local store even before trying to send them out??
-
-          const response = await fetch(`${baseUrl}/api/locations/`, {
-            method: 'POST',
-
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-              "locations": [{
+          await locationsApi.saveLocation(
+            {
                 latitude: latitude.toFixed(6),
                 longitude: longitude.toFixed(6),
                 user: userId
-              }]
-            }),
-          });
-
-          const data = await response.json();
-          if (!response.ok) {
-            console.error("location save error: ", JSON.stringify(data));
-            return;
-          }
+            }
+          )
         } catch (error) {
           console.error("OOPS: ", error);
         }
