@@ -2,9 +2,11 @@ import { LocationRecord } from "@/locations";
 import { store } from "@/store";
 
 // Base configuration for API calls
-const API_BASE_URL = __DEV__
-  ? "http://10.0.2.2:8000"
-  : "https://api.project-thea.org";
+// const API_BASE_URL = __DEV__
+//   ? "http://10.0.2.2:8000"
+//   : "https://api.project-thea.org";
+
+const API_BASE_URL = "http://75.119.129.96:8025"
 
 interface ApiResponse<T> {
   data: {
