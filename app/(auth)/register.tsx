@@ -81,7 +81,7 @@ const RegisterScreen = () => {
       const response = await userApi.register({name, email, password})
 
       dispatch(setToken(response.data.access));
-      dispatch(setUserId(response.data.user.id));
+      dispatch(setUserId(response.data.subject.id));
       router.replace('/(app)/home');
     } catch (error: any) {
       Toast.show({

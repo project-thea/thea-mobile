@@ -6,7 +6,7 @@ import {
 } from "@react-navigation/drawer";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useDispatch } from "react-redux";
-import { clearToken, clearUserId } from "@/store";
+import { clearToken, clearUserId, setIsSignedIn } from "@/store";
 
 function CustomDrawerContent(props) {
   const dispatch = useDispatch();
@@ -14,6 +14,7 @@ function CustomDrawerContent(props) {
   const handleSignOut = () => {
     dispatch(clearToken());
     dispatch(clearUserId());
+    dispatch(setIsSignedIn(false));
   };
 
   return (

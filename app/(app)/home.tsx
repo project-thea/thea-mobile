@@ -10,10 +10,10 @@ import {
 import * as Location from "expo-location";
 import { useBaseUrl } from "@/hooks/useBaseUrl";
 import { useSelector, useDispatch } from "react-redux";
-import { addLocation, store } from "@/store";
+import { addLocation, RootState, store } from "@/store";
 import { v4 as uuidv4 } from "uuid";
 import VIForegroundService from "@voximplant/react-native-foreground-service";
-import { locationsApi } from "@/services/api";
+import { API_BASE_URL, locationsApi } from "@/services/api";
 
 export default function MainScreen() {
   const [mainButtonText, setButtonText] = useState("Start tracking!");
@@ -22,19 +22,30 @@ export default function MainScreen() {
   const [locationSubscription, setLocationSubscription] =
   useState<null | Location.LocationSubscription>(null);
     
-  const baseUrl = useBaseUrl();
   const dispatch = useDispatch();
-  const token = useSelector((state) => state.auth.token);
-  const userId = useSelector((state) => state.auth.userId);
-  const locations = useSelector((state) => state.location.locations);
+  const subjectId = useSelector((state: RootState) => state.auth.userId);
+  const CHANNEL_ID = "22";
 
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
+        // TODO; what happens if the user refuses to give location  permissions?
         console.log("Permission to access location was denied");
         return;
       }
+
+      const channelConfig = {
+        id: CHANNEL_ID,
+        name: "Location tracking",
+        description: "",
+        enableVibration: false,
+      };
+  
+      await VIForegroundService.getInstance().createNotificationChannel(
+        channelConfig
+      );
+      
     })();
 
     // cleanup function to stop tracking
@@ -53,23 +64,12 @@ export default function MainScreen() {
   const startTracking = async () => {
     console.log("Starting tracking");
 
-    const channelConfig = {
-      id: "22",
-      name: "Tracking location",
-      description: "Your location is being tracked and recorded",
-      enableVibration: false,
-    };
-    await VIForegroundService.getInstance().createNotificationChannel(
-      channelConfig
-    );
-
     const notificationConfig = {
-      channelId: "22",
+      channelId: CHANNEL_ID,
       id: 2210,
-      title: "Title",
-      text: "Some text",
-      icon: "ic_icon",
-      button: "Some text",
+      title: "Tracking in progress",
+      text: "Tap to stop tracking",
+      icon: "ic_launcher",
     };
 
     await VIForegroundService.getInstance().startService(notificationConfig, 1);
@@ -81,15 +81,16 @@ export default function MainScreen() {
         distanceInterval: 50, // 50 metres
       },
       async (location) => {
-        // console.log("location: ", location);
-        dispatch(
-          addLocation({
-            ...location,
-            isSynced: false,
-            user: userId,
-            id: uuidv4(),
-          })
-        );
+        // TODO(functionality): sample every say 10 seconds but send data every say 5 mins
+
+        // dispatch(
+        //   addLocation({
+        //     ...location,
+        //     isSynced: false,
+        //     user: subjectId,
+        //     id: uuidv4(),
+        //   })
+        // );
 
         try {
           const { latitude, longitude } = location.coords;
@@ -98,11 +99,11 @@ export default function MainScreen() {
             {
                 latitude: latitude.toFixed(6),
                 longitude: longitude.toFixed(6),
-                user: userId
+                subject: subjectId as string
             }
           )
-        } catch (error) {
-          console.error("OOPS: ", error);
+        } catch (error: any) {
+          console.error("Error saving location: ", error.message);
         }
       }
     );

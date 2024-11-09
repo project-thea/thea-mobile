@@ -24,7 +24,8 @@ const authSlice = createSlice({
     },
     clearUserId: (state) => {
       state.userId = null;
-    }
+    },
+    setIsSignedIn: (state, action: PayloadAction<boolean>) => { state.isSignedIn = action.payload; }
   },
 });
 
@@ -48,7 +49,7 @@ const locationSlice = createSlice({
 // TODO; Add a selector to get all unsynced locations
 
 // Export actions
-export const { setToken, clearToken, setUserId, clearUserId } = authSlice.actions;
+export const { setToken, clearToken, setUserId, clearUserId, setIsSignedIn } = authSlice.actions;
 export const { addLocation, deleteLocation } = locationSlice.actions;
 
 // Configure persist
