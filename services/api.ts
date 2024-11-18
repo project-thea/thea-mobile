@@ -1,4 +1,5 @@
 import { LocationRecord } from "@/locations";
+import { RealmService } from "@/store";
 
 export const API_BASE_URL = __DEV__
   // ? "http://192.168.164.198:8000" // use this for physical device(change this to match your host IP)
@@ -33,8 +34,12 @@ class ApiService {
   }
 
   private getAccessToken() {
-    // TODO: fix this
-    return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ3MjE5NjQ2LCJpYXQiOjE3MzE2Njc2NDYsImp0aSI6ImM0MDZhNWY5ODgyMDQyOTU4ZTBhODMzMDJmZTdmYTc1IiwidXNlcl9pZCI6ImQyMWRmNzczLThhMzAtNGExOS04N2ZhLTVlNDQzMzE1MjBkNCJ9.XBZrktZrgJYZf442wECHF0vMCXZTWabTQB7Z6pa4UeA"
+
+    let token = RealmService.getUserToken()
+
+    if(token) return token;
+    return null;
+
   }
 
   private getHeaders(endpoint?: string): HeadersInit {

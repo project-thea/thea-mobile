@@ -15,11 +15,8 @@ import {
   Keyboard,
   Alert
 } from 'react-native';
-import { useDispatch } from 'react-redux';
 import Toast from 'react-native-toast-message';
 
-import { setToken, setUserId } from '../../store';
-import { useBaseUrl } from '@/hooks/useBaseUrl';
 import { userApi } from '@/services/api';
 import { useRealm } from '@realm/react';
 
@@ -38,7 +35,6 @@ const RegisterScreen = () => {
   const [confirmPasswordMissing, setConfirmPasswordMissing] = useState(false)
 
   const router = useRouter();
-  const baseUrl = useBaseUrl();
   const realm = useRealm()
 
   useEffect(() => {
