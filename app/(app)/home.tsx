@@ -13,6 +13,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
 import VIForegroundService from "@voximplant/react-native-foreground-service";
 import { API_BASE_URL, locationsApi } from "@/services/api";
+import { useQuery } from "@realm/react";
 
 export default function MainScreen() {
   const [mainButtonText, setButtonText] = useState("Start tracking!");
@@ -20,6 +21,9 @@ export default function MainScreen() {
   const [isTrackingButtonClicked, setIsTrackingButtonCliked] = useState(false);
   const [locationSubscription, setLocationSubscription] =
   useState<null | Location.LocationSubscription>(null);
+
+  const subject: any = useQuery('Subject')[0]
+  const subjectId = subject?.subjectId
     
   const CHANNEL_ID = "22";
 
@@ -87,7 +91,7 @@ export default function MainScreen() {
             {
                 latitude: latitude.toFixed(6),
                 longitude: longitude.toFixed(6),
-                subject: "d21df773-8a30-4a19-87fa-5e44331520d4" // TODO; fix this
+                subject: subjectId as string
             }
           )
         } catch (error: any) {

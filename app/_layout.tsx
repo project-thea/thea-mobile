@@ -20,8 +20,8 @@ export default function RootLayout() {
       <RealmProvider schema={[Subject]}>
           <AuthGuard>
             <Stack screenOptions={{headerShown: false}}>
-              {/* <Stack.Screen name="(app)" /> */}
-              {/* <Stack.Screen name="(auth)" /> */}
+              <Stack.Screen name="(app)" />
+              <Stack.Screen name="(auth)/login" />
             </Stack>
             <Toast />
           </AuthGuard>
