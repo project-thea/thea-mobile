@@ -5,16 +5,15 @@ import {
   DrawerItemList,
 } from "@react-navigation/drawer";
 import { View, Text, TouchableOpacity } from "react-native";
-import { useDispatch } from "react-redux";
-import { clearToken, clearUserId, setIsSignedIn } from "@/store";
+import { useRealm } from "@realm/react";
 
 function CustomDrawerContent(props) {
-  const dispatch = useDispatch();
+  const realm = useRealm()
 
   const handleSignOut = () => {
-    dispatch(clearToken());
-    dispatch(clearUserId());
-    dispatch(setIsSignedIn(false));
+    realm.write(() => {
+      realm.deleteAll();
+    });
   };
 
   return (

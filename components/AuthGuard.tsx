@@ -1,22 +1,32 @@
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter, useSegments } from 'expo-router';
-import { RootState } from '../store';
+import { useQuery, useRealm } from '@realm/react';
+import { Subject } from '../store';
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const isSignedIn = useSelector((state: RootState) => state.auth.isSignedIn);
   const segments = useSegments();
   const router = useRouter();
+  
+  const subject: any = useQuery('Subject')[0]
+  const isSignedIn = subject?.isSignedIn === true
 
   useEffect(() => {
     const inAuthGroup = segments[0] === '(auth)';
 
-    if (!isSignedIn && !inAuthGroup) {
+    if (!inAuthGroup && !isSignedIn) {
       router.replace('/(auth)/login');
-    } else if (isSignedIn && inAuthGroup) {
-      router.replace('/(app)/home');
+    } else if (!inAuthGroup && isSignedIn) {
+      // for some reason, something like if "(inAuthGroup && isSignedIn)"
+      // does not work, and it keeps on sending me to the "Not-Found screen"
+      // this is a workaroung for that
+      // it may not look clean, but it works
+      if(segments[0] === '+not-found'){
+        router.replace('/(app)/home');
+      }
     }
-  }, [isSignedIn, segments]);
+
+  }, [segments, isSignedIn]);
 
   return <>{children}</>;
 }

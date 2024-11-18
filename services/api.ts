@@ -1,9 +1,8 @@
 import { LocationRecord } from "@/locations";
-import { store } from "@/store";
 
 export const API_BASE_URL = __DEV__
-  ? "http://192.168.164.198:8000" // use this for physical device(change this to match your host IP)
-  // ? "http://10.0.2.2:8000" // use for emulator
+  // ? "http://192.168.164.198:8000" // use this for physical device(change this to match your host IP)
+  ? "http://10.0.2.2:8000" // use for emulator
   : "https://testsite.esomelo.com/thea";
 
 interface ApiResponse<T> {
@@ -34,7 +33,8 @@ class ApiService {
   }
 
   private getAccessToken() {
-    return store.getState().auth.token;
+    // TODO: fix this
+    return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ3MjE5NjQ2LCJpYXQiOjE3MzE2Njc2NDYsImp0aSI6ImM0MDZhNWY5ODgyMDQyOTU4ZTBhODMzMDJmZTdmYTc1IiwidXNlcl9pZCI6ImQyMWRmNzczLThhMzAtNGExOS04N2ZhLTVlNDQzMzE1MjBkNCJ9.XBZrktZrgJYZf442wECHF0vMCXZTWabTQB7Z6pa4UeA"
   }
 
   private getHeaders(endpoint?: string): HeadersInit {
@@ -42,7 +42,7 @@ class ApiService {
       "Content-Type": "application/json",
     };
 
-    if (endpoint !== "/login/" && endpoint !== "/register/") {
+    if (endpoint !== "/login/user" && endpoint !== "/login/subject" && endpoint !== "/register/subject") {
       headers["Authorization"] = `Bearer ${this.getAccessToken()}`;
     }
 

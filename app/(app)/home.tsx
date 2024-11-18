@@ -10,7 +10,6 @@ import {
 import * as Location from "expo-location";
 import { useBaseUrl } from "@/hooks/useBaseUrl";
 import { useSelector, useDispatch } from "react-redux";
-import { addLocation, RootState, store } from "@/store";
 import { v4 as uuidv4 } from "uuid";
 import VIForegroundService from "@voximplant/react-native-foreground-service";
 import { API_BASE_URL, locationsApi } from "@/services/api";
@@ -22,8 +21,6 @@ export default function MainScreen() {
   const [locationSubscription, setLocationSubscription] =
   useState<null | Location.LocationSubscription>(null);
     
-  const dispatch = useDispatch();
-  const subjectId = useSelector((state: RootState) => state.auth.userId);
   const CHANNEL_ID = "22";
 
   useEffect(() => {
@@ -83,15 +80,6 @@ export default function MainScreen() {
       async (location) => {
         // TODO(functionality): sample every say 10 seconds but send data every say 5 mins
 
-        // dispatch(
-        //   addLocation({
-        //     ...location,
-        //     isSynced: false,
-        //     user: subjectId,
-        //     id: uuidv4(),
-        //   })
-        // );
-
         try {
           const { latitude, longitude } = location.coords;
 
@@ -99,7 +87,7 @@ export default function MainScreen() {
             {
                 latitude: latitude.toFixed(6),
                 longitude: longitude.toFixed(6),
-                subject: subjectId as string
+                subject: "d21df773-8a30-4a19-87fa-5e44331520d4" // TODO; fix this
             }
           )
         } catch (error: any) {
