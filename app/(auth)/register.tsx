@@ -85,7 +85,7 @@ const RegisterScreen = () => {
         });
       });
 
-      router.replace('/(app)/home');
+      router.replace('/home');
     } catch (error: any) {
       Toast.show({
         type: 'error',

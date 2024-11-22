@@ -57,7 +57,7 @@ const LoginScreen = () => {
         });
       });
 
-      router.replace('/(app)/home');
+      router.replace('/home');
 
       
     } catch (error) {
@@ -76,7 +76,7 @@ const LoginScreen = () => {
   };
 
   const navigateToRegister = () => {
-   router.replace('/(auth)/register');
+   router.replace('/register');
   };
 
   useEffect(() => {
@@ -102,7 +102,7 @@ const LoginScreen = () => {
         });
       });
 
-      router.replace('/(app)/home');
+      router.replace('/home');
       
     } catch (error) {
       console.error('could not create anonymous user', error);

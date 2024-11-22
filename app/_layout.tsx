@@ -4,6 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
 import Toast from 'react-native-toast-message';
 import { Subject } from '@/store';
+import { StrictMode } from 'react';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import AuthGuard from '@/components/AuthGuard';
@@ -16,16 +17,15 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <RealmProvider schema={[Subject]}>
-          <AuthGuard>
-            <Stack screenOptions={{headerShown: false}}>
-              <Stack.Screen name="(app)" />
-              <Stack.Screen name="(auth)/login" />
-            </Stack>
-            <Toast />
-          </AuthGuard>
-      </RealmProvider>
-    </ThemeProvider>
+    <StrictMode>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <RealmProvider schema={[Subject]}>
+            <AuthGuard>
+              <Stack screenOptions={{headerShown: false}}></Stack>
+              <Toast />
+            </AuthGuard>
+        </RealmProvider>
+      </ThemeProvider>
+    </StrictMode>
   );
 }

@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon_thea_mobile.png",
-    "scheme": "myapp",
+    "scheme": "theamobile",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/splash_thea_mobile.png",
