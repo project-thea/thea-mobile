@@ -6,6 +6,8 @@ export const API_BASE_URL = __DEV__
   ? "http://10.0.2.2:8000" // use for. emulator
   : "https://testsite.esomelo.com/thea";
 
+// export const API_BASE_URL = "https://testsite.esomelo.com/thea"
+
 interface ApiResponse<T> {
   data: T;
   status: number;
@@ -47,7 +49,13 @@ class ApiService {
       "Content-Type": "application/json",
     };
 
-    if (endpoint !== "/login/user" && endpoint !== "/login/subject" && endpoint !== "/register/subject") {
+    const noAuthNeededRoutes = [
+      "/login/user/",
+      "/login/subject/",
+      "/register/subject/",
+    ]
+
+    if (!noAuthNeededRoutes.includes(endpoint || "")) {
       headers["Authorization"] = `Bearer ${this.getAccessToken()}`;
     }
 
