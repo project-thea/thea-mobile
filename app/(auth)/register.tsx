@@ -15,12 +15,10 @@ import {
   Keyboard,
   Alert
 } from 'react-native';
-import { useDispatch } from 'react-redux';
 import Toast from 'react-native-toast-message';
 
-import { setToken, setUserId } from '../../store';
-import { useBaseUrl } from '@/hooks/useBaseUrl';
 import { userApi } from '@/services/api';
+import { useRealm } from '@realm/react';
 
 const RegisterScreen = () => {
   const [name, setName] = useState('');
@@ -37,8 +35,7 @@ const RegisterScreen = () => {
   const [confirmPasswordMissing, setConfirmPasswordMissing] = useState(false)
 
   const router = useRouter();
-  const dispatch = useDispatch();
-  const baseUrl = useBaseUrl();
+  const realm = useRealm()
 
   useEffect(() => {
     if(name) setNameMissing(false)
@@ -80,9 +77,15 @@ const RegisterScreen = () => {
     try {
       const response = await userApi.register({name, email, password})
 
-      dispatch(setToken(response.data.access));
-      dispatch(setUserId(response.data.user.id));
-      router.replace('/(app)/home');
+      realm.write(() => {
+        realm.create('Subject', {
+          subjectId: response.data.subject.id,
+          isSignedIn: true,
+          token: response.data.access,
+        });
+      });
+
+      router.replace('/home');
     } catch (error: any) {
       Toast.show({
         type: 'error',

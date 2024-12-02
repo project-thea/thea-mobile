@@ -14,14 +14,13 @@ import {
   Alert,
   ActivityIndicator
 } from 'react-native';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
 import Toast from 'react-native-toast-message';
 
 import Divider from '@/components/Divider';
-import { setToken, setUserId } from '../../store';
 import { userApi } from '@/services/api';
-import { useBaseUrl } from '@/hooks/useBaseUrl';
+import { useRealm, Realm } from '@realm/react';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -29,9 +28,9 @@ const LoginScreen = () => {
   const [passwordMissing, setPasswordMissing] = useState(false);
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
   const router = useRouter();
-  const dispatch = useDispatch();
-  const baseUrl = useBaseUrl();
+  const realm = useRealm()
 
   const handleLogin = async () => {
     if(!email ){
@@ -50,12 +49,19 @@ const LoginScreen = () => {
     try {
       const response = await userApi.login({email, password})
 
-      dispatch(setToken(response.data.access));
-      dispatch(setUserId(response.data.user.id));
-      router.replace('/(app)/home');
+      realm.write(() => {
+        realm.create('Subject', {
+          subjectId: response.data.subject.id,
+          isSignedIn: true,
+          token: response.data.access,
+        });
+      });
+
+      router.replace('/home');
+
       
     } catch (error) {
-      // console.error('Login error:', error);
+      console.error('Login error:', error);
       Toast.show({
         type: 'error',
         text1: 'Oops!',
@@ -70,7 +76,7 @@ const LoginScreen = () => {
   };
 
   const navigateToRegister = () => {
-   router.replace('/(auth)/register');
+   router.replace('/register');
   };
 
   useEffect(() => {
@@ -88,9 +94,15 @@ const LoginScreen = () => {
     try {
       const response = await userApi.register({name, email, password})
 
-      dispatch(setToken(response.data.access));
-      dispatch(setUserId(response.data.user.id));
-      router.replace('/(app)/home');
+      realm.write(() => {
+        realm.create('Subject', {
+          subjectId: response.data.subject.id,
+          isSignedIn: true,
+          token: response.data.access,
+        });
+      });
+
+      router.replace('/home');
       
     } catch (error) {
       console.error('could not create anonymous user', error);

@@ -1,17 +1,13 @@
 import { LocationRecord } from "@/locations";
-import { store } from "@/store";
+import { RealmService } from "@/store";
 
-// Base configuration for API calls
-const API_BASE_URL = __DEV__
-  ? "http://10.0.2.2:8000"
-  : "https://api.project-thea.org";
+export const API_BASE_URL = __DEV__
+  // ? "http://192.168.32.198:8000" // use this for physical device(change this to match your host IP)
+  ? "http://10.0.2.2:8000" // use for. emulator
+  : "https://testsite.esomelo.com/thea";
 
 interface ApiResponse<T> {
-  data: {
-    access: string;
-    refresh: string;
-    user: User;
-  };
+  data: T;
   status: number;
   message?: string;
 }
@@ -38,7 +34,12 @@ class ApiService {
   }
 
   private getAccessToken() {
-    return store.getState().auth.token;
+
+    let token = RealmService.getUserToken()
+
+    if(token) return token;
+    return null;
+
   }
 
   private getHeaders(endpoint?: string): HeadersInit {
@@ -46,7 +47,7 @@ class ApiService {
       "Content-Type": "application/json",
     };
 
-    if (endpoint !== "/login/" && endpoint !== "/register/") {
+    if (endpoint !== "/login/user" && endpoint !== "/login/subject" && endpoint !== "/register/subject") {
       headers["Authorization"] = `Bearer ${this.getAccessToken()}`;
     }
 
@@ -123,21 +124,21 @@ export const apiService = ApiService.getInstance();
 
 export const userApi = {
   login: (credentials: LoginCredentials) =>
-    apiService.post<AuthResponse>("/login/", credentials),
+    apiService.post<AuthResponse>("/login/subject/", credentials),
   register: (details: RegisterDetails) =>
-    apiService.post<AuthResponse>("/register/", details),
+    apiService.post<AuthResponse>("/register/subject/", details),
 };
 
 export const locationsApi = {
-  saveLocation: (data: LocationRecord) => {
+  saveLocation: async (data: LocationRecord) => {
     const _data = {
       locations: [data],
     };
-    apiService.post<User>("/api/locations/", _data);
+    await apiService.post<Subject>("/api/locations/", _data);
   },
 };
 
-interface User {
+interface Subject {
   id: string;
   name: string;
   email: string;
@@ -155,6 +156,6 @@ interface RegisterDetails {
 }
 
 interface AuthResponse {
-  token: string;
-  user: User;
+  access: string;
+  subject: Subject;
 }

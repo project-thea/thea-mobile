@@ -1,22 +1,25 @@
 import React, { useEffect } from 'react';
-import { useSelector } from 'react-redux';
 import { useRouter, useSegments } from 'expo-router';
-import { RootState } from '../store';
+import { useQuery, useRealm } from '@realm/react';
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const isSignedIn = useSelector((state: RootState) => state.auth.isSignedIn);
   const segments = useSegments();
   const router = useRouter();
+  
+  const subject: any = useQuery('Subject')[0]
+  const isSignedIn = subject?.isSignedIn === true
 
   useEffect(() => {
     const inAuthGroup = segments[0] === '(auth)';
 
-    if (!isSignedIn && !inAuthGroup) {
-      router.replace('/(auth)/login');
-    } else if (isSignedIn && inAuthGroup) {
-      router.replace('/(app)/home');
+    if (!inAuthGroup && !isSignedIn) {
+      // trying to access routes outside of the auth group
+      router.replace('/login');
+    } else if (!inAuthGroup && isSignedIn) {
+        router.replace('/home');
     }
-  }, [isSignedIn, segments]);
+
+  }, [segments, isSignedIn]);
 
   return <>{children}</>;
 }
