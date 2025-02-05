@@ -10,6 +10,7 @@ import VIForegroundService from "@voximplant/react-native-foreground-service";
 import { locationsApi } from "@/services/api";
 import { useQuery } from "@realm/react";
 import { RealmService } from "@/store";
+import { LocationRecord } from "@/locations";
 
 export default function MainScreen() {
   const [mainButtonText, setButtonText] = useState("Start tracking!");
@@ -24,7 +25,7 @@ export default function MainScreen() {
   const subjectId = subject?.subjectId
     
   const CHANNEL_ID = "22";
-  const SAMPLING_INTERVAL    =  1 * 60 * 1000  // 1 minute(s)
+  const SAMPLING_INTERVAL    =  0.5 * 60 * 1000  // 30 second(s)
   const SYNC_INTERVAL        =  5 * 60 * 1000  // 5 minute(s)
   const CLEANUP_INTERVAL     =  5 * 60 * 1000  // 5 minute(s)
 
@@ -76,30 +77,32 @@ export default function MainScreen() {
   };
 
   const startSync = () => {
-    console.log("Starting sync");
-
     const syncInterval = setInterval(async () => {
+      console.log("Starting sync");
       const locations = RealmService.getUnsyncedLocations()
 
       if(locations.length > 0){
+        const locationRecords: LocationRecord[] = []
+
         locations.forEach(async location => {
-          const locationRecord = {
-            latitude: location.latitude,
-            longitude: location.longitude,
-            subject: location.subject,
-          }
-          await locationsApi.saveLocation(locationRecord)
+          const { latitude, longitude , subject} = location
+          const locationRecord = { latitude, longitude, subject }
+          locationRecords.push(locationRecord as LocationRecord)
+        })
+
+        await locationsApi.saveLocations(locationRecords).then(() => {
+          RealmService.markLocationsAsSynced(locations)
         })
       }
+
     }, SYNC_INTERVAL);
 
     return syncInterval
   }
 
   const startCleanup = () => {
-    console.log("Starting cleanup");
-
     const cleanupInterval = setInterval(async () => {
+      console.log("Starting cleanup");
         RealmService.clearSyncedLocations()
     }, CLEANUP_INTERVAL);
 
@@ -123,11 +126,9 @@ export default function MainScreen() {
       {
         accuracy: Location.Accuracy.BestForNavigation,
         timeInterval: SAMPLING_INTERVAL,
-        distanceInterval: 50, // 50 metres
+        distanceInterval: 10, // 10 metres
       },
       async (location) => {
-        // TODO(functionality): sample every say 10 seconds but send data every say 5 mins
-
         try {
           const { latitude, longitude } = location.coords;
           const locationRecord = {

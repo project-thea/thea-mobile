@@ -6,15 +6,19 @@ import {
 } from "@react-navigation/drawer";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useRealm } from "@realm/react";
+import { userApi } from "@/services/api";
+import { RealmService } from "@/store";
 
 function CustomDrawerContent(props) {
   const realm = useRealm()
 
-  const handleSignOut = () => {
-    // TODO - make a call to the backend so that these tokens can be blacklisted. how did i even miss this?
-    realm.write(() => {
-      realm.deleteAll();
-    });
+  const handleSignOut = async () => {
+    try {
+      realm.write(() => {
+        realm.deleteAll();
+      });
+    } catch (error) {}
+    
   };
 
   return (

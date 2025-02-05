@@ -1,5 +1,6 @@
 import Realm from "realm"
 import { LocationRecord } from "./locations"
+import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 
 enum SyncStatus {
@@ -7,13 +8,13 @@ enum SyncStatus {
   PENDING = 'PENDING',
 }
 
-const CURR_SCHEMA_VERSION = 1
 
 export const Subject = {
   name: 'Subject',
   primaryKey: 'subjectId',
   properties: {
-    token: 'string', 
+    access: 'string', 
+    refresh: 'string',
     isSignedIn: 'bool',
     subjectId: 'string',
   }
@@ -32,27 +33,62 @@ export const Location = {
 }
 
 export class RealmService{
-  static instance: Realm
+  static instance: Realm | null = null
+  static CURR_SCHEMA_VERSION = 0
+
+  static migrationFunctions: Record<string, (oldRealm: Realm, newRealm: Realm) => void> = {
+    '0-1': (oldRealm: Realm, newRealm: Realm) => {}
+  }
+
+  static defaultConfig: Realm.Configuration = {
+    schema: [Subject, Location],
+    schemaVersion: 0,
+    onMigration: (oldRealm, newRealm) => {
+      const oldSchemaVersion = oldRealm.schemaVersion
+
+      // Migrate one version at a time
+      for (let version = oldSchemaVersion; version < RealmService.CURR_SCHEMA_VERSION; version++) {
+        const migrationKey = `${version}-${version + 1}`;
+        const migrationFn = RealmService.migrationFunctions[migrationKey];
+
+        if(migrationFn){
+          migrationFn(oldRealm, newRealm)
+        }
+      }
+    },
+  }
+
+  static isMigrationNeeded(){
+    console.log("Current schema version: ", Realm.schemaVersion(Realm.defaultPath))
+    return Realm.schemaVersion(Realm.defaultPath) < RealmService.CURR_SCHEMA_VERSION
+  }
 
   static getInstance(){
     if(!RealmService.instance){
-      RealmService.instance = new Realm({
-        schema: [Subject, Location],
-
-        // TODO; write more resilient migration logic when the schema version changes
-        schemaVersion: CURR_SCHEMA_VERSION,
-        path: 'ver2.realm', // TODO: remove this
-      })
-    } 
+      RealmService.instance = new Realm(RealmService.defaultConfig)
+    }
 
     return RealmService.instance
   }
 
-  static getUserToken(){
-    const realm = RealmService.getInstance()
-    const token = realm.objects("Subject")[0]?.token
+  static getAccessToken(){
+    const realm = RealmService.getInstance()  
+    const access = realm.objects("Subject")[0]?.access
 
-    return token
+    return access
+  }
+
+  static migrate(){
+    const realm = RealmService.getInstance()
+    realm.close()
+    RealmService.instance = new Realm({...RealmService.defaultConfig, schemaVersion: RealmService.CURR_SCHEMA_VERSION})
+  }
+
+  static getRefreshToken(){
+    const realm = RealmService.getInstance()
+    const refresh = realm.objects("Subject")[0]?.refresh
+
+    return refresh
   }
 
   static saveLocationCoordinates(location: LocationRecord, syncStatus: SyncStatus = SyncStatus.PENDING){
@@ -82,6 +118,17 @@ export class RealmService{
 
     realm.write(() => {
       realm.delete(locations)
+    })
+  }
+
+  static markLocationsAsSynced(locations: any){
+    const realm = RealmService.getInstance()
+
+    realm.write(() => {
+      locations.forEach((location: any) => {
+        const locationRecord = realm.objects("Location").filtered('locationId == $0', location.locationId)[0]
+        locationRecord.syncStatus = SyncStatus.SYNCED
+      })
     })
   }
 }

@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
 import Toast from 'react-native-toast-message';
-import { Subject } from '@/store';
+import { Subject, Location } from '@/store';
 import { StrictMode } from 'react';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -19,7 +19,7 @@ export default function RootLayout() {
   return (
     <StrictMode>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <RealmProvider schema={[Subject]}>
+        <RealmProvider schema={[Subject, Location]}>
             <AuthGuard>
               <Stack screenOptions={{headerShown: false}}></Stack>
               <Toast />

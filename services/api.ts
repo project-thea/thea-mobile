@@ -2,7 +2,7 @@ import { LocationRecord } from "@/locations";
 import { RealmService } from "@/store";
 
 export const API_BASE_URL = __DEV__
-  ? "http://192.168.137.242:8000" // use this for physical device(change this to match your host IP)
+  ? "http://192.168.188.3:8000" // use this for physical device(change this to match your host IP)
   // ? "http://10.0.2.2:8000" // use for. emulator
   : "https://testsite.esomelo.com/thea";
 
@@ -37,7 +37,7 @@ class ApiService {
 
   private getAccessToken() {
 
-    let token = RealmService.getUserToken()
+    let token = RealmService.getAccessToken()
 
     if(token) return token;
     throw new Error("Could not load access token");
@@ -135,14 +135,16 @@ export const apiService = ApiService.getInstance();
 export const userApi = {
   login: (credentials: LoginCredentials) =>
     apiService.post<AuthResponse>("/login/subject/", credentials),
+  signOut: (refreshToken: any) => 
+    apiService.post("/logout/subject/", refreshToken),
   register: (details: RegisterDetails) =>
     apiService.post<AuthResponse>("/register/subject/", details),
 };
 
 export const locationsApi = {
-  saveLocation: async (data: LocationRecord) => {
+  saveLocations: async (locationRecords: LocationRecord[]) => {
     const _data = {
-      locations: [data],
+      locations: [...locationRecords],
     };
     await apiService.post<Subject>("/api/locations/", _data);
   },
@@ -167,5 +169,6 @@ interface RegisterDetails {
 
 interface AuthResponse {
   access: string;
+  refresh: string;
   subject: Subject;
 }

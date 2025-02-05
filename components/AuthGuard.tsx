@@ -1,6 +1,13 @@
 import React, { useEffect } from 'react';
 import { useRouter, useSegments } from 'expo-router';
 import { useQuery, useRealm } from '@realm/react';
+import { RealmService } from '@/store';
+
+const doOnAppStartUp = () => {
+  if(RealmService.isMigrationNeeded()){
+    RealmService.migrate()
+  }
+}
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const segments = useSegments();
@@ -20,6 +27,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     }
 
   }, [segments, isSignedIn]);
+
+  useEffect(() => {
+    doOnAppStartUp()
+  }, []);
 
   return <>{children}</>;
 }
