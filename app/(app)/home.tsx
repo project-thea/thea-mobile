@@ -4,16 +4,12 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  PermissionsAndroid,
-  Platform,
 } from "react-native";
 import * as Location from "expo-location";
-import { useBaseUrl } from "@/hooks/useBaseUrl";
-import { useSelector, useDispatch } from "react-redux";
-import { v4 as uuidv4 } from "uuid";
 import VIForegroundService from "@voximplant/react-native-foreground-service";
-import { API_BASE_URL, locationsApi } from "@/services/api";
+import { locationsApi } from "@/services/api";
 import { useQuery } from "@realm/react";
+import { RealmService } from "@/store";
 
 export default function MainScreen() {
   const [mainButtonText, setButtonText] = useState("Start tracking!");
@@ -21,11 +17,16 @@ export default function MainScreen() {
   const [isTrackingButtonClicked, setIsTrackingButtonCliked] = useState(false);
   const [locationSubscription, setLocationSubscription] =
   useState<null | Location.LocationSubscription>(null);
+  const [syncInterval, setSyncInterval] = useState<NodeJS.Timeout>();
+  const [cleanUpInterval, setCleanUpInterval] = useState<NodeJS.Timeout>();
 
   const subject: any = useQuery('Subject')[0]
   const subjectId = subject?.subjectId
     
   const CHANNEL_ID = "22";
+  const SAMPLING_INTERVAL    =  1 * 60 * 1000  // 1 minute(s)
+  const SYNC_INTERVAL        =  5 * 60 * 1000  // 5 minute(s)
+  const CLEANUP_INTERVAL     =  5 * 60 * 1000  // 5 minute(s)
 
   useEffect(() => {
     (async () => {
@@ -46,21 +47,64 @@ export default function MainScreen() {
       await VIForegroundService.getInstance().createNotificationChannel(
         channelConfig
       );
+
+      const syncInterval = startSync()
+      setSyncInterval(syncInterval)
+
+      const cleanUpInterval = startCleanup()
+      setCleanUpInterval(cleanUpInterval)
       
     })();
 
-    // cleanup function to stop tracking
-    // is this even getting called??
     return () => {
       stopTracking();
       setButtonText("Start tracking!");
       setButtonColor("#34eb5b");
+
+      if(syncInterval){
+        clearInterval(syncInterval)
+      }
+
+      if(cleanUpInterval){
+        clearInterval(cleanUpInterval)
+      }
     };
   }, []);
 
   const handleTrackingButtonClicked = () => {
     setIsTrackingButtonCliked(!isTrackingButtonClicked);
   };
+
+  const startSync = () => {
+    console.log("Starting sync");
+
+    const syncInterval = setInterval(async () => {
+      const locations = RealmService.getUnsyncedLocations()
+
+      if(locations.length > 0){
+        locations.forEach(async location => {
+          const locationRecord = {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            subject: location.subject,
+          }
+          await locationsApi.saveLocation(locationRecord)
+        })
+      }
+    }, SYNC_INTERVAL);
+
+    return syncInterval
+  }
+
+  const startCleanup = () => {
+    console.log("Starting cleanup");
+
+    const cleanupInterval = setInterval(async () => {
+        RealmService.clearSyncedLocations()
+    }, CLEANUP_INTERVAL);
+
+    return cleanupInterval
+  }
 
   const startTracking = async () => {
     console.log("Starting tracking");
@@ -78,7 +122,7 @@ export default function MainScreen() {
     const subscription = await Location.watchPositionAsync(
       {
         accuracy: Location.Accuracy.BestForNavigation,
-        timeInterval: 2 * 60 * 1000, // 2 minutes
+        timeInterval: SAMPLING_INTERVAL,
         distanceInterval: 50, // 50 metres
       },
       async (location) => {
@@ -86,16 +130,15 @@ export default function MainScreen() {
 
         try {
           const { latitude, longitude } = location.coords;
+          const locationRecord = {
+            latitude: latitude.toFixed(6),
+            longitude: longitude.toFixed(6),
+            subject: subjectId as string,
+          };
 
-          await locationsApi.saveLocation(
-            {
-                latitude: latitude.toFixed(6),
-                longitude: longitude.toFixed(6),
-                subject: subjectId as string
-            }
-          )
+          RealmService.saveLocationCoordinates(locationRecord)
         } catch (error: any) {
-          console.error("Error saving location: ", error.message);
+          console.error("Could not save location to local storage: ", error.message);
         }
       }
     );

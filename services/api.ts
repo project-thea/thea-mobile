@@ -2,8 +2,8 @@ import { LocationRecord } from "@/locations";
 import { RealmService } from "@/store";
 
 export const API_BASE_URL = __DEV__
-  // ? "http://192.168.32.198:8000" // use this for physical device(change this to match your host IP)
-  ? "http://10.0.2.2:8000" // use for. emulator
+  ? "http://192.168.137.242:8000" // use this for physical device(change this to match your host IP)
+  // ? "http://10.0.2.2:8000" // use for. emulator
   : "https://testsite.esomelo.com/thea";
 
 // export const API_BASE_URL = "https://testsite.esomelo.com/thea"
@@ -40,8 +40,7 @@ class ApiService {
     let token = RealmService.getUserToken()
 
     if(token) return token;
-    return null;
-
+    throw new Error("Could not load access token");
   }
 
   private getHeaders(endpoint?: string): HeadersInit {
@@ -53,6 +52,9 @@ class ApiService {
       "/login/user/",
       "/login/subject/",
       "/register/subject/",
+
+      // TODO; remove this - it is just a hack for the current bug in the backend
+      "/api/locations/"
     ]
 
     if (!noAuthNeededRoutes.includes(endpoint || "")) {

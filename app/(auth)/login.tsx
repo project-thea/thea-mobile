@@ -11,16 +11,14 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   ScrollView,
-  Alert,
   ActivityIndicator
 } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
 import Toast from 'react-native-toast-message';
 
 import Divider from '@/components/Divider';
 import { userApi } from '@/services/api';
-import { useRealm, Realm } from '@realm/react';
+import { useRealm } from '@realm/react';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -58,7 +56,6 @@ const LoginScreen = () => {
       });
 
       router.replace('/home');
-
       
     } catch (error) {
       console.error('Login error:', error);
@@ -117,7 +114,6 @@ const LoginScreen = () => {
       setEmail('');
       setPassword('');
     }
-
   }
 
 

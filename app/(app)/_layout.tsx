@@ -11,6 +11,7 @@ function CustomDrawerContent(props) {
   const realm = useRealm()
 
   const handleSignOut = () => {
+    // TODO - make a call to the backend so that these tokens can be blacklisted. how did i even miss this?
     realm.write(() => {
       realm.deleteAll();
     });
