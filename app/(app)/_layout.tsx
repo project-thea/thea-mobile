@@ -47,6 +47,14 @@ export default function Layout() {
             headerShown: true,
           }}
         />
+        <Drawer.Screen
+          name="settings"
+          options={{
+            drawerLabel: "Settings",
+            title: "Settings",
+            headerShown: true,
+          }}
+        />
       </Drawer>
     </GestureHandlerRootView>
   );

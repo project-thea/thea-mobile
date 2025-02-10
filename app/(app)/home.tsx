@@ -34,14 +34,14 @@ export default function MainScreen() {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         // TODO; what happens if the user refuses to give location  permissions?
-        console.log("Permission to access location was denied");
+        console.log(`[INFO][${new Date().toISOString()}] Permission to access location was denied`);
         return;
       }
 
       const channelConfig = {
         id: CHANNEL_ID,
         name: "Location tracking",
-        description: "",
+        description: "Channel description",
         enableVibration: false,
       };
   
@@ -78,7 +78,7 @@ export default function MainScreen() {
 
   const startSync = () => {
     const syncInterval = setInterval(async () => {
-      console.log("Starting sync");
+      console.log(`[INFO][${new Date().toISOString()}] Starting sync`);
       const locations = RealmService.getUnsyncedLocations()
 
       if(locations.length > 0){
@@ -92,6 +92,8 @@ export default function MainScreen() {
 
         await locationsApi.saveLocations(locationRecords).then(() => {
           RealmService.markLocationsAsSynced(locations)
+        }).catch((error) => {
+          console.error("Error saving locations online - will retry job at next interval");
         })
       }
 
@@ -101,16 +103,18 @@ export default function MainScreen() {
   }
 
   const startCleanup = () => {
-    const cleanupInterval = setInterval(async () => {
-      console.log("Starting cleanup");
-        RealmService.clearSyncedLocations()
-    }, CLEANUP_INTERVAL);
+    try {
+      const cleanupInterval = setInterval(async () => {
+        console.log(`[INFO][${new Date().toISOString()}] Starting cleanup`);
+          RealmService.clearSyncedLocations()
+      }, CLEANUP_INTERVAL);
 
-    return cleanupInterval
+      return cleanupInterval
+    } catch (error) {}
   }
 
   const startTracking = async () => {
-    console.log("Starting tracking");
+    console.log(`[INFO][${new Date().toISOString()}] Starting tracking`);
 
     const notificationConfig = {
       channelId: CHANNEL_ID,
@@ -148,7 +152,7 @@ export default function MainScreen() {
   };
 
   const stopTracking = async () => {
-    console.log("Stopping tracking");
+    console.log(`[INFO][${new Date().toISOString()}] Stopping tracking`);
 
     try {
       await VIForegroundService.getInstance().stopService();
@@ -204,6 +208,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "white",
-    fontSize: 16,
+    fontSize: 20,
   },
 });
