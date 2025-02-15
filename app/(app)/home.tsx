@@ -16,8 +16,7 @@ export default function MainScreen() {
   const [mainButtonText, setButtonText] = useState("Start tracking!");
   const [buttonColor, setButtonColor] = useState("#34eb5b");
   const [isTrackingButtonClicked, setIsTrackingButtonCliked] = useState(false);
-  const [locationSubscription, setLocationSubscription] =
-  useState<null | Location.LocationSubscription>(null);
+  const [locationSubscription, setLocationSubscription] = useState<null | Location.LocationSubscription>(null);
   const [syncInterval, setSyncInterval] = useState<NodeJS.Timeout>();
   const [cleanUpInterval, setCleanUpInterval] = useState<NodeJS.Timeout>();
 
@@ -25,7 +24,7 @@ export default function MainScreen() {
   const subjectId = subject?.subjectId
     
   const CHANNEL_ID = "22";
-  const SAMPLING_INTERVAL    =  0.5 * 60 * 1000  // 30 second(s)
+  const SAMPLING_INTERVAL    =  0.25 * 60 * 1000  // 15 second(s)
   const SYNC_INTERVAL        =  5 * 60 * 1000  // 5 minute(s)
   const CLEANUP_INTERVAL     =  5 * 60 * 1000  // 5 minute(s)
 
@@ -130,7 +129,7 @@ export default function MainScreen() {
       {
         accuracy: Location.Accuracy.BestForNavigation,
         timeInterval: SAMPLING_INTERVAL,
-        distanceInterval: 10, // 10 metres
+        distanceInterval: 5, // 5 metres
       },
       async (location) => {
         try {
@@ -139,6 +138,7 @@ export default function MainScreen() {
             latitude: latitude.toFixed(6),
             longitude: longitude.toFixed(6),
             subject: subjectId as string,
+            timestamp: new Date().toISOString(),
           };
 
           RealmService.saveLocationCoordinates(locationRecord)

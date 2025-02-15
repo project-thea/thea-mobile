@@ -29,20 +29,36 @@ export const Location = {
     longitude: 'string',
     subject: 'string',
     syncStatus: 'string', // can we infer this type from SyncStatus instead of hardcoding "string"
+    timestamp: 'string',
   }
 }
 
 export class RealmService{
   static instance: Realm | null = null
-  static CURR_SCHEMA_VERSION = 0
+  static CURR_SCHEMA_VERSION = 1
 
   static migrationFunctions: Record<string, (oldRealm: Realm, newRealm: Realm) => void> = {
-    '0-1': (oldRealm: Realm, newRealm: Realm) => {}
+    '0-1': (oldRealm: Realm, newRealm: Realm) => {
+      // | ---- SCHEMA------- | ----- NEW FIELDS ---- |
+      // |     Location       |       timestamp       |
+    }
   }
 
-  static defaultConfig: Realm.Configuration = {
+  private static getSchemaVersion(){
+    // if no database at the default path e.g.
+    // fresh install on a device
+    if(Realm.schemaVersion(Realm.defaultPath) === -1){
+      return RealmService.CURR_SCHEMA_VERSION
+    }
+
+    // the app is already installed on the device.
+    // things like updates
+    return Math.max(Realm.schemaVersion(Realm.defaultPath), RealmService.CURR_SCHEMA_VERSION)
+  }
+
+  private static defaultConfig: Realm.Configuration = {
     schema: [Subject, Location],
-    schemaVersion: 0,
+    schemaVersion: RealmService.getSchemaVersion(),
     onMigration: (oldRealm, newRealm) => {
       const oldSchemaVersion = oldRealm.schemaVersion
 
@@ -60,6 +76,10 @@ export class RealmService{
 
   static isMigrationNeeded(){
     console.log("Current schema version: ", Realm.schemaVersion(Realm.defaultPath))
+    if(Realm.schemaVersion(Realm.defaultPath) === -1){
+      return false
+    }
+
     return Realm.schemaVersion(Realm.defaultPath) < RealmService.CURR_SCHEMA_VERSION
   }
 
@@ -79,8 +99,19 @@ export class RealmService{
   }
 
   static migrate(){
-    const realm = RealmService.getInstance()
-    realm.close()
+    // close the existing realm
+    if(RealmService.instance){
+      RealmService.instance.close()
+    }
+
+    // does a realm exist at the default path? if yes, close it
+    if(Realm.exists(Realm.defaultPath)){
+      console.log("A realm exists at the default path. Will proceed to close it")
+      const defaultRealmVersion = Realm.schemaVersion(Realm.defaultPath)
+      const oldRealm = new Realm({...RealmService.defaultConfig, schemaVersion: defaultRealmVersion})
+      oldRealm.close()
+    }
+
     RealmService.instance = new Realm({...RealmService.defaultConfig, schemaVersion: RealmService.CURR_SCHEMA_VERSION})
   }
 

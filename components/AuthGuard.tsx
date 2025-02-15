@@ -4,6 +4,9 @@ import { useQuery, useRealm } from '@realm/react';
 import { RealmService } from '@/store';
 
 const doOnAppStartUp = () => {
+  // this particualar ream logic could be moved to something that wraps the
+  // default RealmProvider(i think), but in the meantime, let us
+  // see how this goes
   if(RealmService.isMigrationNeeded()){
     RealmService.migrate()
   }
@@ -17,6 +20,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const isSignedIn = subject?.isSignedIn === true
 
   useEffect(() => {
+    doOnAppStartUp()
+  }, []);
+
+  useEffect(() => {
     const inAuthGroup = segments[0] === '(auth)';
 
     if (!inAuthGroup && !isSignedIn) {
@@ -27,10 +34,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     }
 
   }, [segments, isSignedIn]);
-
-  useEffect(() => {
-    doOnAppStartUp()
-  }, []);
 
   return <>{children}</>;
 }
