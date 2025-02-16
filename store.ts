@@ -39,6 +39,7 @@ export class RealmService{
 
   static migrationFunctions: Record<string, (oldRealm: Realm, newRealm: Realm) => void> = {
     '0-1': (oldRealm: Realm, newRealm: Realm) => {
+      console.log("Migrating from version 0 to 1")
       // | ---- SCHEMA------- | ----- NEW FIELDS ---- |
       // |     Location       |       timestamp       |
     }
@@ -61,6 +62,10 @@ export class RealmService{
     schemaVersion: RealmService.getSchemaVersion(),
     onMigration: (oldRealm, newRealm) => {
       const oldSchemaVersion = oldRealm.schemaVersion
+
+      // debugging
+      console.log("Old schema version: ", oldRealm.schemaVersion)
+      console.log("New schema version: ", newRealm.schemaVersion)
 
       // Migrate one version at a time
       for (let version = oldSchemaVersion; version < RealmService.CURR_SCHEMA_VERSION; version++) {
@@ -108,7 +113,7 @@ export class RealmService{
     if(Realm.exists(Realm.defaultPath)){
       console.log("A realm exists at the default path. Will proceed to close it")
       const defaultRealmVersion = Realm.schemaVersion(Realm.defaultPath)
-      const oldRealm = new Realm({...RealmService.defaultConfig, schemaVersion: defaultRealmVersion})
+      const oldRealm = new Realm({ schemaVersion: defaultRealmVersion, path: Realm.defaultPath })
       oldRealm.close()
     }
 
