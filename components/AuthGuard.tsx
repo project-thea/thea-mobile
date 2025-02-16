@@ -1,16 +1,6 @@
 import React, { useEffect } from 'react';
 import { useRouter, useSegments } from 'expo-router';
-import { useQuery, useRealm } from '@realm/react';
-import { RealmService } from '@/store';
-
-const doOnAppStartUp = () => {
-  // this particualar ream logic could be moved to something that wraps the
-  // default RealmProvider(i think), but in the meantime, let us
-  // see how this goes
-  if(RealmService.isMigrationNeeded()){
-    RealmService.migrate()
-  }
-}
+import { useQuery } from '@realm/react';
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const segments = useSegments();
@@ -18,10 +8,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   
   const subject: any = useQuery('Subject')[0]
   const isSignedIn = subject?.isSignedIn === true
-
-  useEffect(() => {
-    doOnAppStartUp()
-  }, []);
 
   useEffect(() => {
     const inAuthGroup = segments[0] === '(auth)';

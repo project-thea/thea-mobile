@@ -3,8 +3,8 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
 import Toast from 'react-native-toast-message';
-import { Subject, Location } from '@/store';
-import { StrictMode } from 'react';
+import { RealmService } from '@/store';
+import { StrictMode, useEffect, useRef, useState } from 'react';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import AuthGuard from '@/components/AuthGuard';
@@ -15,16 +15,37 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const realmInitDone = useRef(false);
+  const [forceRenderOnRealmInit, setForceRenderOnRealmInit] = useState(false);
+
+  const realmInit = () => {
+    if(RealmService.isMigrationNeeded()){
+      RealmService.migrate()
+    }
+  }
+
+  useEffect(() => {
+    if(!realmInitDone.current){
+      realmInit()
+    }
+    
+    realmInitDone.current = true;
+    setForceRenderOnRealmInit(!forceRenderOnRealmInit);
+  }, []);
 
   return (
     <StrictMode>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <RealmProvider schema={[Subject, Location]}>
-            <AuthGuard>
-              <Stack screenOptions={{headerShown: false}}></Stack>
-              <Toast />
-            </AuthGuard>
-        </RealmProvider>
+        {
+          realmInitDone.current && (
+            <RealmProvider realm={RealmService.getInstance()} >
+                <AuthGuard>
+                  <Stack screenOptions={{headerShown: false}}></Stack>
+                  <Toast />
+                </AuthGuard>
+            </RealmProvider>
+          )
+        }
       </ThemeProvider>
     </StrictMode>
   );
