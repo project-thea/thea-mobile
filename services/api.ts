@@ -2,9 +2,11 @@ import { LocationRecord } from "@/locations";
 import { RealmService } from "@/store";
 
 export const API_BASE_URL = __DEV__
-  // ? "http://192.168.32.198:8000" // use this for physical device(change this to match your host IP)
-  ? "http://10.0.2.2:8000" // use for. emulator
+  ? "http://192.168.188.3:8000" // use this for physical device(change this to match your host IP)
+  // ? "http://10.0.2.2:8000" // use for. emulator
   : "https://testsite.esomelo.com/thea";
+
+// export const API_BASE_URL = "https://testsite.esomelo.com/thea"
 
 interface ApiResponse<T> {
   data: T;
@@ -35,11 +37,10 @@ class ApiService {
 
   private getAccessToken() {
 
-    let token = RealmService.getUserToken()
+    let token = RealmService.getAccessToken()
 
     if(token) return token;
-    return null;
-
+    throw new Error("Could not load access token");
   }
 
   private getHeaders(endpoint?: string): HeadersInit {
@@ -47,7 +48,16 @@ class ApiService {
       "Content-Type": "application/json",
     };
 
-    if (endpoint !== "/login/user" && endpoint !== "/login/subject" && endpoint !== "/register/subject") {
+    const noAuthNeededRoutes = [
+      "/login/user/",
+      "/login/subject/",
+      "/register/subject/",
+
+      // TODO; remove this - it is just a hack for the current bug in the backend
+      "/api/locations/"
+    ]
+
+    if (!noAuthNeededRoutes.includes(endpoint || "")) {
       headers["Authorization"] = `Bearer ${this.getAccessToken()}`;
     }
 
@@ -125,14 +135,16 @@ export const apiService = ApiService.getInstance();
 export const userApi = {
   login: (credentials: LoginCredentials) =>
     apiService.post<AuthResponse>("/login/subject/", credentials),
+  signOut: (refreshToken: any) => 
+    apiService.post("/logout/subject/", refreshToken),
   register: (details: RegisterDetails) =>
     apiService.post<AuthResponse>("/register/subject/", details),
 };
 
 export const locationsApi = {
-  saveLocation: async (data: LocationRecord) => {
+  saveLocations: async (locationRecords: LocationRecord[]) => {
     const _data = {
-      locations: [data],
+      locations: [...locationRecords],
     };
     await apiService.post<Subject>("/api/locations/", _data);
   },
@@ -157,5 +169,6 @@ interface RegisterDetails {
 
 interface AuthResponse {
   access: string;
+  refresh: string;
   subject: Subject;
 }

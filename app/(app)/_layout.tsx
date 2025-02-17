@@ -6,14 +6,19 @@ import {
 } from "@react-navigation/drawer";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useRealm } from "@realm/react";
+import { userApi } from "@/services/api";
+import { RealmService } from "@/store";
 
 function CustomDrawerContent(props) {
   const realm = useRealm()
 
-  const handleSignOut = () => {
-    realm.write(() => {
-      realm.deleteAll();
-    });
+  const handleSignOut = async () => {
+    try {
+      realm.write(() => {
+        realm.deleteAll();
+      });
+    } catch (error) {}
+    
   };
 
   return (
@@ -39,6 +44,14 @@ export default function Layout() {
           options={{
             drawerLabel: "Home",
             title: "Home",
+            headerShown: true,
+          }}
+        />
+        <Drawer.Screen
+          name="settings"
+          options={{
+            drawerLabel: "Settings",
+            title: "Settings",
             headerShown: true,
           }}
         />

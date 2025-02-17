@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useRouter, useSegments } from 'expo-router';
-import { useQuery, useRealm } from '@realm/react';
+import { useQuery } from '@realm/react';
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const segments = useSegments();

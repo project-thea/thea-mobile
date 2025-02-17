@@ -4,57 +4,70 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  PermissionsAndroid,
-  Platform,
 } from "react-native";
 import * as Location from "expo-location";
-import { useBaseUrl } from "@/hooks/useBaseUrl";
-import { useSelector, useDispatch } from "react-redux";
-import { v4 as uuidv4 } from "uuid";
 import VIForegroundService from "@voximplant/react-native-foreground-service";
-import { API_BASE_URL, locationsApi } from "@/services/api";
+import { locationsApi } from "@/services/api";
 import { useQuery } from "@realm/react";
+import { RealmService } from "@/store";
+import { LocationRecord } from "@/locations";
 
 export default function MainScreen() {
   const [mainButtonText, setButtonText] = useState("Start tracking!");
   const [buttonColor, setButtonColor] = useState("#34eb5b");
   const [isTrackingButtonClicked, setIsTrackingButtonCliked] = useState(false);
-  const [locationSubscription, setLocationSubscription] =
-  useState<null | Location.LocationSubscription>(null);
+  const [locationSubscription, setLocationSubscription] = useState<null | Location.LocationSubscription>(null);
+  const [syncInterval, setSyncInterval] = useState<NodeJS.Timeout>();
+  const [cleanUpInterval, setCleanUpInterval] = useState<NodeJS.Timeout>();
 
   const subject: any = useQuery('Subject')[0]
   const subjectId = subject?.subjectId
     
   const CHANNEL_ID = "22";
+  const SAMPLING_INTERVAL    =  0.25 * 60 * 1000  // 15 second(s)
+  const SYNC_INTERVAL        =  5 * 60 * 1000  // 5 minute(s)
+  const CLEANUP_INTERVAL     =  5 * 60 * 1000  // 5 minute(s)
 
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         // TODO; what happens if the user refuses to give location  permissions?
-        console.log("Permission to access location was denied");
+        console.log(`[INFO][${new Date().toISOString()}] Permission to access location was denied`);
         return;
       }
 
       const channelConfig = {
         id: CHANNEL_ID,
         name: "Location tracking",
-        description: "",
+        description: "Channel description",
         enableVibration: false,
       };
   
       await VIForegroundService.getInstance().createNotificationChannel(
         channelConfig
       );
+
+      const syncInterval = startSync()
+      setSyncInterval(syncInterval)
+
+      const cleanUpInterval = startCleanup()
+      setCleanUpInterval(cleanUpInterval)
       
     })();
 
-    // cleanup function to stop tracking
-    // is this even getting called??
     return () => {
       stopTracking();
       setButtonText("Start tracking!");
       setButtonColor("#34eb5b");
+
+      if(syncInterval){
+        clearInterval(syncInterval)
+      }
+
+      if(cleanUpInterval){
+        clearInterval(cleanUpInterval)
+      }
     };
   }, []);
 
@@ -62,8 +75,45 @@ export default function MainScreen() {
     setIsTrackingButtonCliked(!isTrackingButtonClicked);
   };
 
+  const startSync = () => {
+    const syncInterval = setInterval(async () => {
+      console.log(`[INFO][${new Date().toISOString()}] Starting sync`);
+      const locations = RealmService.getUnsyncedLocations()
+
+      if(locations.length > 0){
+        const locationRecords: LocationRecord[] = []
+
+        locations.forEach(async location => {
+          const { latitude, longitude , subject} = location
+          const locationRecord = { latitude, longitude, subject }
+          locationRecords.push(locationRecord as LocationRecord)
+        })
+
+        await locationsApi.saveLocations(locationRecords).then(() => {
+          RealmService.markLocationsAsSynced(locations)
+        }).catch((error) => {
+          console.error("Error saving locations online - will retry job at next interval");
+        })
+      }
+
+    }, SYNC_INTERVAL);
+
+    return syncInterval
+  }
+
+  const startCleanup = () => {
+    try {
+      const cleanupInterval = setInterval(async () => {
+        console.log(`[INFO][${new Date().toISOString()}] Starting cleanup`);
+          RealmService.clearSyncedLocations()
+      }, CLEANUP_INTERVAL);
+
+      return cleanupInterval
+    } catch (error) {}
+  }
+
   const startTracking = async () => {
-    console.log("Starting tracking");
+    console.log(`[INFO][${new Date().toISOString()}] Starting tracking`);
 
     const notificationConfig = {
       channelId: CHANNEL_ID,
@@ -78,24 +128,22 @@ export default function MainScreen() {
     const subscription = await Location.watchPositionAsync(
       {
         accuracy: Location.Accuracy.BestForNavigation,
-        timeInterval: 2 * 60 * 1000, // 2 minutes
-        distanceInterval: 50, // 50 metres
+        timeInterval: SAMPLING_INTERVAL,
+        distanceInterval: 5, // 5 metres
       },
       async (location) => {
-        // TODO(functionality): sample every say 10 seconds but send data every say 5 mins
-
         try {
           const { latitude, longitude } = location.coords;
+          const locationRecord = {
+            latitude: latitude.toFixed(6),
+            longitude: longitude.toFixed(6),
+            subject: subjectId as string,
+            timestamp: new Date().toISOString(),
+          };
 
-          await locationsApi.saveLocation(
-            {
-                latitude: latitude.toFixed(6),
-                longitude: longitude.toFixed(6),
-                subject: subjectId as string
-            }
-          )
+          RealmService.saveLocationCoordinates(locationRecord)
         } catch (error: any) {
-          console.error("Error saving location: ", error.message);
+          console.error("Could not save location to local storage: ", error.message);
         }
       }
     );
@@ -104,7 +152,7 @@ export default function MainScreen() {
   };
 
   const stopTracking = async () => {
-    console.log("Stopping tracking");
+    console.log(`[INFO][${new Date().toISOString()}] Stopping tracking`);
 
     try {
       await VIForegroundService.getInstance().stopService();
@@ -160,6 +208,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "white",
-    fontSize: 16,
+    fontSize: 20,
   },
 });

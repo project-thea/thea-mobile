@@ -81,7 +81,8 @@ const RegisterScreen = () => {
         realm.create('Subject', {
           subjectId: response.data.subject.id,
           isSignedIn: true,
-          token: response.data.access,
+          access: response.data.access,
+          refresh: response.data.refresh
         });
       });
 
