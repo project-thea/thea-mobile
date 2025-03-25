@@ -11,6 +11,7 @@ import { locationsApi } from "@/services/api";
 import { useQuery } from "@realm/react";
 import { RealmService } from "@/store";
 import { LocationRecord } from "@/locations";
+import { hello } from "@/modules/thea-work-manager"; "@/modules/thea-work-manager/index";
 
 export default function MainScreen() {
   const [mainButtonText, setButtonText] = useState("Start tracking!");
@@ -178,7 +179,7 @@ export default function MainScreen() {
     }
   }, [isTrackingButtonClicked]);
 
-  // const message = TheaWorkManagerModule.hello();
+  const message = hello();
 
   return (
     <View style={styles.container}>
@@ -187,7 +188,7 @@ export default function MainScreen() {
         onPress={handleTrackingButtonClicked}
       >
         <Text style={styles.buttonText}>{mainButtonText}</Text>
-        <Text style={styles.buttonText}>{}</Text>
+        <Text style={styles.buttonText}>{message}</Text>
       </TouchableOpacity>
     </View>
   );
