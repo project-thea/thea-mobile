@@ -178,6 +178,7 @@ export default function MainScreen() {
     }
   }, [isTrackingButtonClicked]);
 
+  // const message = TheaWorkManagerModule.hello();
 
   return (
     <View style={styles.container}>
@@ -186,6 +187,7 @@ export default function MainScreen() {
         onPress={handleTrackingButtonClicked}
       >
         <Text style={styles.buttonText}>{mainButtonText}</Text>
+        <Text style={styles.buttonText}>{}</Text>
       </TouchableOpacity>
     </View>
   );
