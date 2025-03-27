@@ -2,7 +2,7 @@ import { LocationRecord } from "@/locations";
 import { RealmService } from "@/store";
 
 export const API_BASE_URL = __DEV__
-  ? "http:/192.168.172.198:8000" // use this for physical device(change this to match your host IP)
+  ? "http://192.168.172.198:8000" // use this for physical device(change this to match your host IP)
   // ? "http://10.0.2.2:8000" // use for. emulator
   : "https://testsite.esomelo.com/thea";
 

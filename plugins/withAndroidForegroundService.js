@@ -1,7 +1,6 @@
 const { withAndroidManifest } = require('@expo/config-plugins');
 
 function addForegroundServiceToManifest(androidManifest) {
-  // Make sure we have the required structure
   if (!androidManifest?.manifest?.application?.[0]) {
     androidManifest = {
       manifest: {
@@ -12,7 +11,6 @@ function addForegroundServiceToManifest(androidManifest) {
 
   const mainApplication = androidManifest.manifest.application[0];
   
-  // Add the service
   if (!mainApplication.service) {
     mainApplication.service = [];
   }
@@ -20,15 +18,15 @@ function addForegroundServiceToManifest(androidManifest) {
   mainApplication.service.push({
     $: {
       'android:name': 'com.voximplant.foregroundservice.VIForegroundService',
-      'android:foregroundServiceType': "dataSync",
+      'android:foregroundServiceType': "dataSync|location",
       'android:exported': 'false'
     }
   });
 
   androidManifest?.manifest['uses-permission'].push({
     $: {
-      'android:name': 'android.permission.FOREGROUND_SERVICE_DATA_SYNC'
-    }
+      'android:name': 'android.permission.POST_NOTIFICATIONS'
+    },
   });
 
   return androidManifest;

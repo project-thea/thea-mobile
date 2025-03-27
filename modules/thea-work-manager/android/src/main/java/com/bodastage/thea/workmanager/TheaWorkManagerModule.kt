@@ -1,29 +1,47 @@
 package com.bodastage.thea.workmanager
 
+import java.util.concurrent.TimeUnit
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import androidx.work.*
+import com.facebook.react.modules.core.DeviceEventManagerModule;
+import android.util.Log
 
 class TheaWorkManagerModule : Module() {
-  // Each module class must implement the definition function. The definition consists of components
-  // that describes the module's functionality and behavior.
-  // See https://docs.expo.dev/modules/module-api for more details about available components.
   override fun definition() = ModuleDefinition {
-    // Sets the name of the module that JavaScript code will use to refer to the module. Takes a string as an argument.
-    // Can be inferred from module's class name, but it's recommended to set it explicitly for clarity.
-    // The module will be accessible from `requireNativeModule('TheaWorkManager')` in JavaScript.
     Name("TheaWorkManager")
 
-    // Sets constant properties on the module. Can take a dictionary or a closure that returns a dictionary.
-    Constants(
-      "PI" to Math.PI
-    )
-
     // Defines event names that the module can send to JavaScript.
-    Events("onChange")
+    Events("locations_background_sync_start")
 
-    // Defines a JavaScript synchronous function that runs the native code on the JavaScript thread.
-    Function("hello") {
-      "Hello world! 👋"
+    Function("registerTask"){ taskName: String, interval: Int ->
+      val context = appContext.reactContext ?: throw Exception("No context found")
+
+      val constraints = Constraints.Builder()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
+
+      val workRequest = PeriodicWorkRequestBuilder<TheaWorker>(
+        interval.toLong(), TimeUnit.SECONDS,
+        15, TimeUnit.MINUTES,
+        )
+        .setConstraints(constraints)
+        .build()
+
+      WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+        taskName,
+        ExistingPeriodicWorkPolicy.KEEP,
+        workRequest
+      )
+
+      Log.d("TheaWorkManager", "Task '$taskName' registered with interval: $interval")
+    }
+
+    Function("deregisterTask"){ taskName: String ->
+      val context = appContext.reactContext ?: throw Exception("No context found")
+
+      WorkManager.getInstance(context).cancelUniqueWork(taskName)
+      Log.d("TheaWorkManager", "Task '$taskName' deregistered")
     }
 
     // Defines a JavaScript function that always returns a Promise and whose native code
@@ -35,13 +53,12 @@ class TheaWorkManagerModule : Module() {
       ))
     }
 
-    // Enables the module to be used as a native view. Definition components that are accepted as part of
-    // the view definition: Prop, Events.
-    View(TheaWorkManagerView::class) {
-      // Defines a setter for the `name` prop.
-      Prop("name") { view: TheaWorkManagerView, prop: String ->
-        println(prop)
-      }
+  }
+
+  companion object {
+    fun emitEvent(context: com.facebook.react.bridge.ReactContext, eventName: String){
+      context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java).emit(eventName, null) // don't send any additional params at the moment
     }
   }
+
 }
