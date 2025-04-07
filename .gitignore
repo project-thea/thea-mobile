@@ -1,7 +1,8 @@
 node_modules/
 .expo/
 dist/
-android/
+/android/
+/ios/
 npm-debug.*
 *.jks
 *.p8

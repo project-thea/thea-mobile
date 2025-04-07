@@ -41,6 +41,7 @@ export default {
       },
     ],
     "./plugins/withAndroidForegroundService.js",
+    "./plugins/withInjectProjectGradleBuildConfig.js"
   ],
   experiments: {
     typedRoutes: true,

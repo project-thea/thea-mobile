@@ -9,9 +9,13 @@ import { StrictMode, useEffect, useRef, useState } from 'react';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import AuthGuard from '@/components/AuthGuard';
 import { RealmProvider } from '@realm/react';
+import { deregisterTask, registerTask } from '@/modules/thea-work-manager';
+import { API_BASE_URL } from '@/services/api';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+const BG_SYNC_INTERVAL = 15 * 60 * 1000 // 15 minutes
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -20,8 +24,12 @@ export default function RootLayout() {
 
   const realmInit = () => {
     if(RealmService.isMigrationNeeded()){
+      deregisterTask('locations_background_sync')
       RealmService.migrate()
     }
+
+    registerTask('locations_background_sync', BG_SYNC_INTERVAL,  RealmService.CURR_SCHEMA_VERSION, API_BASE_URL);
+
   }
 
   useEffect(() => {

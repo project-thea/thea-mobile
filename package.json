@@ -22,7 +22,7 @@
     "@react-navigation/native": "^6.0.2",
     "@realm/react": "^0.11.0",
     "@reduxjs/toolkit": "^2.2.8",
-    "@voximplant/react-native-foreground-service": "github:bodastage/react-native-foreground-service",
+    "@voximplant/react-native-foreground-service": "github:tjnangosha/react-native-foreground-service",
     "expo": "~51.0.28",
     "expo-background-fetch": "~12.0.1",
     "expo-constants": "~16.0.2",

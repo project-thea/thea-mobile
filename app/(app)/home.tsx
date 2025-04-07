@@ -115,40 +115,54 @@ export default function MainScreen() {
   const startTracking = async () => {
     console.log(`[INFO][${new Date().toISOString()}] Starting tracking`);
 
+    const channelConfig = {
+      id: CHANNEL_ID,
+      name: "Location tracking",
+      description: "Track locations",
+      enableVibration: true,
+      importance: 3
+    };
+
+    await VIForegroundService.getInstance().createNotificationChannel(channelConfig);
+
     const notificationConfig = {
       channelId: CHANNEL_ID,
       id: 2210,
       title: "Tracking in progress",
-      text: "Tap to stop tracking",
+      text: "",
       icon: "ic_launcher",
     };
 
-    await VIForegroundService.getInstance().startService(notificationConfig, 1);
+    await VIForegroundService.getInstance().startService(notificationConfig, 8)
 
-    const subscription = await Location.watchPositionAsync(
-      {
-        accuracy: Location.Accuracy.BestForNavigation,
-        timeInterval: SAMPLING_INTERVAL,
-        distanceInterval: 5, // 5 metres
-      },
-      async (location) => {
-        try {
-          const { latitude, longitude } = location.coords;
-          const locationRecord = {
-            latitude: latitude.toFixed(6),
-            longitude: longitude.toFixed(6),
-            subject: subjectId as string,
-            timestamp: new Date().toISOString(),
-          };
-
-          RealmService.saveLocationCoordinates(locationRecord)
-        } catch (error: any) {
-          console.error("Could not save location to local storage: ", error.message);
+    VIForegroundService.getInstance().on("SIGNAL_LOCATION_TRACK_START", async () => {
+      const subscription = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.BestForNavigation,
+          timeInterval: SAMPLING_INTERVAL,
+          distanceInterval: 5, // 5 metres
+        },
+        async (location) => {
+          try {
+            const { latitude, longitude } = location.coords;
+            const locationRecord = {
+              latitude: latitude.toFixed(6),
+              longitude: longitude.toFixed(6),
+              subject: subjectId as string,
+              timestamp: new Date().toISOString(),
+            };
+  
+            RealmService.saveLocationCoordinates(locationRecord)
+            console.log(`[INFO][${new Date().toISOString()}] Location: ${latitude}, ${longitude}`);
+          } catch (error: any) {
+            console.error("Could not save location to local storage: ", error.message);
+          }
         }
-      }
-    );
+      );
+  
+      setLocationSubscription(subscription);
+    });
 
-    setLocationSubscription(subscription);
   };
 
   const stopTracking = async () => {
@@ -177,7 +191,6 @@ export default function MainScreen() {
       setButtonColor("#34eb5b");
     }
   }, [isTrackingButtonClicked]);
-
 
   return (
     <View style={styles.container}>
