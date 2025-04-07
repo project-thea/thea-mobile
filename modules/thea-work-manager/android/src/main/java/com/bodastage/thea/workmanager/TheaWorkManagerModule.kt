@@ -1,11 +1,10 @@
 package com.bodastage.thea.workmanager
 
-import java.util.concurrent.TimeUnit
+import android.util.Log
+import androidx.work.*
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
-import androidx.work.*
-import com.facebook.react.modules.core.DeviceEventManagerModule;
-import android.util.Log
+import java.util.concurrent.TimeUnit
 
 class TheaWorkManagerModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -14,7 +13,11 @@ class TheaWorkManagerModule : Module() {
     // Defines event names that the module can send to JavaScript.
     Events("locations_background_sync_start")
 
-    Function("registerTask"){ taskName: String, interval: Int ->
+    Function("helloWorld"){  ->
+      Log.d("TheaWorkManager", "Hello World from Kotlin!")
+    }
+
+    Function("registerTask"){ taskName: String, interval: Int, schemaVersion: Int, baseUrl: String ->
       val context = appContext.reactContext ?: throw Exception("No context found")
 
       val constraints = Constraints.Builder()
@@ -22,15 +25,17 @@ class TheaWorkManagerModule : Module() {
         .build()
 
       val workRequest = PeriodicWorkRequestBuilder<TheaWorker>(
-        interval.toLong(), TimeUnit.SECONDS,
-        15, TimeUnit.MINUTES,
+        interval.toLong(), TimeUnit.MILLISECONDS,
+        5, TimeUnit.MINUTES,
         )
+        .setInputData(workDataOf("SCHEMA_VERSION" to schemaVersion, "BASE_URL" to baseUrl))
         .setConstraints(constraints)
+        .setInitialDelay(0, TimeUnit.MILLISECONDS)
         .build()
 
       WorkManager.getInstance(context).enqueueUniquePeriodicWork(
         taskName,
-        ExistingPeriodicWorkPolicy.KEEP,
+        ExistingPeriodicWorkPolicy.REPLACE,
         workRequest
       )
 
@@ -51,13 +56,6 @@ class TheaWorkManagerModule : Module() {
       sendEvent("onChange", mapOf(
         "value" to value
       ))
-    }
-
-  }
-
-  companion object {
-    fun emitEvent(context: com.facebook.react.bridge.ReactContext, eventName: String){
-      context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java).emit(eventName, null) // don't send any additional params at the moment
     }
   }
 

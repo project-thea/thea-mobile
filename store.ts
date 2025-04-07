@@ -143,7 +143,7 @@ export class RealmService{
     const realm = RealmService.getInstance()
     const locations = realm.objects("Location").filtered('syncStatus == $0', SyncStatus.PENDING)
 
-    return locations // can we derive the types from that Location schema above?
+    return locations
   }
 
   static clearSyncedLocations(){
